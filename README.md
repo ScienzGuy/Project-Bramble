@@ -6,11 +6,11 @@ An orchestrated Raspberry Pi 5 cluster dedicated to distributed computing and sc
 
 The cluster, nicknamed **"Bramble,"** is designed for high compute density and long-term stability.
 
-* **Nodes:** 2x Raspberry Pi 5 (8GB RAM)
+* **Nodes:** 2x Raspberry Pi 5 8GB
     * **Ganymede:** Nomad Server/Client (Master) - `192.168.86.126`
     * **Callisto:** Nomad Client (Worker) - `192.168.86.127`
 * **Power & Cooling:** * UCTronics PoE HATs with PWM-controlled active cooling.
-    * Managed via Netgear Managed Switch with 63W Total PoE Budget.
+    * Managed via Netgear 5-port managed PoE+ switch with 63W total PoE budget.
 
 ---
 
@@ -87,7 +87,7 @@ Configured to allow privileged Docker containers and host volume mounting:
 3.  **Architecture Mismatch:**
     * **Fix:** Ensure use of `boinc/client:arm64v8` tags for Pi hardware.
 
-4.   **Thermal Management:**
+4.  **Thermal Management:**
     * **Observation:** Callisto (top node) consistently runs ~2-5°C hotter than Ganymede due to thermal stacking.
     * **Fix:** Implemented aggressive PWM fan curves starting at 50°C.
 
