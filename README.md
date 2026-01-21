@@ -87,6 +87,10 @@ Configured to allow privileged Docker containers and host volume mounting:
 3.  **Architecture Mismatch:**
     * **Fix:** Ensure use of `boinc/client:arm64v8` tags for Pi hardware.
 
+4.   **Thermal Management:**
+    * **Observation: Callisto (top node) consistently runs ~2-5°C hotter than Ganymede due to thermal stacking.
+    * **Fix:** Implemented aggressive PWM fan curves starting at 50°C.
+     
 ---
 
 ## 📊 Management
