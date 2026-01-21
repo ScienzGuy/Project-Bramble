@@ -6,12 +6,11 @@ An orchestrated Raspberry Pi 5 cluster dedicated to distributed computing and sc
 
 The cluster, nicknamed **"Bramble,"** is designed for high compute density and long-term stability.
 
-* **Nodes:** 4x Raspberry Pi 5 (8GB RAM)
+* **Nodes:** 2x Raspberry Pi 5 (8GB RAM)
     * **Ganymede:** Nomad Server/Client (Master) - `192.168.86.126`
     * **Callisto:** Nomad Client (Worker) - `192.168.86.127`
-    * **Io & Europa:** (Provisioning pending)
 * **Power & Cooling:** * UCTronics PoE HATs with PWM-controlled active cooling.
-    * Managed via 63W Total PoE Budget.
+    * Managed via Netgear Managed Switch with 63W Total PoE Budget.
 
 ---
 
