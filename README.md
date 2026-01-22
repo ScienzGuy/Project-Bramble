@@ -28,7 +28,7 @@ As of January 2026, the cluster has been migrated from an unstable 2.6GHz overcl
 
 ## 🚀 Software Stack
 
-* **OS:** Raspberry Pi OS (64-bit) / Ubuntu 25.04
+* **OS:** Raspberry Pi OS Lite (64-bit)
 * **Orchestration:** HashiCorp Nomad 1.7+
 * **Containerization:** Docker
 * **Workload:** BOINC (Asteroids@home)
