@@ -1,10 +1,10 @@
-# Project Bramble: "Big Science" Nomad Cluster
+# Pi Project: Theia - "Big Science" Nomad Cluster
 
 An orchestrated Raspberry Pi 5 cluster dedicated to distributed computing and scientific research via BOINC, managed by HashiCorp Nomad.
 
 ## 🏗️ Hardware Architecture
 
-The cluster, nicknamed **"Bramble,"** is designed for high compute density and long-term stability.
+The cluster, nicknamed **"Theia"**, is designed for high compute density and long-term stability.
 
 * **Nodes:** 2x Raspberry Pi 5 8GB
     * **Ganymede:** Nomad Server/Client (Master) - `192.168.86.126`
