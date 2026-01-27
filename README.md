@@ -1,4 +1,4 @@
-# Theia: High-Performance Bare-Metal BOINC
+# Theia: High-Performance Pi Cluster for BOINC
 ## Distributed Scientific Computing on Overclocked Raspberry Pi 5
 
 ### Part of the [Project Jupiter] Ecosystem
