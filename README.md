@@ -48,6 +48,6 @@ GAIa provides local, private AI inference services. While the primary cluster is
 * **Vector Math Optimization:** Verified `asimd` and `asimddp` support; BOINC binaries utilizing Advanced SIMD (NEON) for Einstein@Home and PrimeGrid GFN workloads.
 
 ---
-*Note: Theia shares the Project Jupiter chassis with the GAIa sub-cluster. This documentation covers the BOINC-specific implementation.*
 
-**Maintained by Scienz_Guy | 2026**
+## 👨‍💻 Maintainer
+**ScienzGuy** [@ScienzGuy](https://github.com/ScienzGuy)
