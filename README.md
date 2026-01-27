@@ -1,100 +1,53 @@
-# Pi Project: Theia - "Big Science" Nomad Cluster
+# 🪐 Project Jupiter: A Hardened 4-Pi 5 Computing Ecosystem
 
-An orchestrated Raspberry Pi 5 cluster dedicated to distributed computing and scientific research via BOINC, managed by HashiCorp Nomad.
+**Project Jupiter** is a distributed high-performance computing (HPC) environment built on a cluster of four Raspberry Pi 5 nodes. The project's mission is to maximize computational efficiency, stability, and security for two distinct workloads: **Astrophysical/Mathematical Modeling** and **Local LLM Inference**.
 
-## 🏗️ Hardware Architecture
+## 🏗️ The Architecture: "The Tidy Pivot"
+Originally designed as a containerized Nomad/Docker orchestration environment, the project underwent a significant architectural shift in January 2026. To eliminate the 5–10% virtualization overhead and close security vulnerabilities inherent in project-led container runpoints, the entire cluster was migrated to **Hardened Bare Metal**.
 
-The cluster, nicknamed **"Theia"**, is designed for high compute density and long-term stability.
+### 🌡️ Thermal & Mechanical Engineering
+* **Subterranean Deployment:** Relocated to a subterranean basement environment to exploit a lower ambient thermal floor, maintaining a steady **49°C** under 100% sustained load.
+* **Clock Optimization:** Pinned at **2200MHz** (the Pi 5 efficiency "sweet spot") with a custom undervolt delta to ensure silicon longevity.
+* **CPU Governor:** Systemd-forced `performance` mode to eliminate frequency scaling latency.
 
-* **Nodes:** 2x Raspberry Pi 5 8GB
-    * **Ganymede:** Nomad Server/Client (Master) - `192.168.86.126`
-    * **Callisto:** Nomad Client (Worker) - `192.168.86.127`
-* **Power & Cooling:** * UCTronics PoE HATs with PWM-controlled active cooling.
-    * Managed via Netgear 5-port managed PoE+ switch with 63W total PoE budget.
+* ## 🌌 Sub-Cluster A: Theia (Nodes: Ganymede & Callisto)
+**Role:** Big Science & Discrete Mathematics  
+**Compute Engine:** BOINC (Berkeley Open Infrastructure for Network Computing)
 
----
+Theia is optimized for high-FPU throughput and utilizes the **asimd** (Advanced SIMD/NEON) and **asimddp** (Dot Product) instruction sets of the Cortex-A76 for accelerated vector math.
 
-## 🛠 Hardware Configuration: The 2026 "Wide & Cool" Baseline
+### 🧬 Science Portfolio & Resource Weighting
+We utilize a weighted resource share to ensure the most critical astrophysical research receives the majority of CPU cycles.
 
-As of January 2026, the cluster has been migrated from an unstable 2.6GHz overclock to a stabilized, underclocked profile to ensure long-term reliability.
-
-| Setting | Value | Impact |
+| Project | Resource Share | Focus Area |
 | :--- | :--- | :--- |
-| **CPU Clock Speed** | **2.2GHz** (2200 MHz) | Prevents thermal throttling and kernel panics. |
-| **Voltage Offset** | **-50mV** (Undervolt) | Lowers power draw and heat while maintaining stability. |
-| **Target Temp** | **~70-73°C** | Optimal thermal signature under 100% load. |
+| **Einstein@home** | 100 | Gravitational Waves & Pulsar detection |
+| **Rosetta@home** | 100 | Molecular Biology & Protein Folding |
+| **PrimeGrid** | 50 | Mathematics (GFN-16 / GFN-17 searches) |
+| **Asteroids@home** | 25 | Solar System Asteroid Shape Modeling |
+| **Universe@Home** | 10 | Galactic Evolution & Black Hole Research |
+
+## 🧠 Sub-Cluster B: GAIa (Nodes: Io & Europa)
+**Role:** Generative Artificial Intelligence & Local Inference  
+**Compute Engine:** Ollama / Open WebUI
+
+GAIa provides local, private AI inference services. While the primary cluster is bare metal, GAIa utilizes a minimal Docker footprint for the Open WebUI frontend to maintain a clean interface for the family.
+
+### 🛠️ Optimization Specs
+* **Inference Engine:** Optimized for 8GB RAM footprints using 4-bit and 8-bit quantization.
+* **Privacy Hardening:** All model weights and chat histories are stored locally; zero data egress to external LLM providers.
+
+## 🛡️ Network & Security Hardening
+* **Congestion Control:** Enabled **BBR (Bottleneck Bandwidth and RTT)** across all nodes to optimize large workunit transfers and model downloads.
+* **RPC Lockdown:** Remote access restricted via `remote_hosts.cfg`; unauthorized subnet CIDR ranges are strictly prohibited.
+* **Firewall:** Localized software firewall on each node, exposing only essential ports (BOINC RPC: 31416, SSH, WebUI).
+
+## 📈 Monitoring & Maintenance
+* **Live Stats:** Individual nodes monitored via **Glances** (Standalone mode).
+* **Logs:** Filtered for architecture compatibility (`aarch64-unknown-linux-gnu`) to ensure zero "ghost" CPU cycles.
+* **Vector Math Optimization:** Verified `asimd` and `asimddp` support; BOINC binaries utilizing Advanced SIMD (NEON) for Einstein@Home and PrimeGrid GFN workloads.
 
 ---
+*Note: Theia shares the Project Jupiter chassis with the GAIa sub-cluster. This documentation covers the BOINC-specific implementation.*
 
-## 🚀 Software Stack
-
-* **OS:** Raspberry Pi OS Lite (64-bit)
-* **Orchestration:** HashiCorp Nomad 1.7+
-* **Containerization:** Docker
-* **Workload:** BOINC (Asteroids@home)
-
-### Self-Healing "Janitor" Logic
-To combat stale lockfiles during power cycles, the Nomad job includes a pre-start task:
-
-    task "janitor" {
-      driver = "raw_exec"
-      lifecycle {
-        hook    = "pre_start"
-        sidecar = false
-      }
-      config {
-        command = "/usr/bin/sudo"
-        args    = ["/usr/bin/rm", "-f", "/opt/boinc_data/lockfile"]
-      }
-    }
-
----
-
-## 🔧 Core Configuration
-
-### Nomad Driver Setup (`nomad.hcl`)
-Configured to allow privileged Docker containers and host volume mounting:
-
-    client {
-      enabled = true
-      options = {
-        "docker.privileged.enabled" = "true"
-        "docker.volumes.enabled"    = "true"
-      }
-    }
-
-    plugin "docker" {
-      config {
-        allow_privileged = true
-        volumes {
-          enabled = true
-        }
-      }
-    }
-
----
-
-## 🛠️ Troubleshooting & Lessons Learned
-
-1.  **Authorization Failure (-155):**
-    * **Cause:** RPC password desync between host and container.
-    * **Fix:** Use `remote_hosts.cfg` to trust `127.0.0.1` and bypass password requirements for local `boinccmd` calls.
-
-2.  **Port Conflict (Error 500):**
-    * **Cause:** Native `boinc-client.service` running on the host OS grabbing Port 31416.
-    * **Fix:** Disable native service: `sudo systemctl disable boinc-client`.
-
-3.  **Architecture Mismatch:**
-    * **Fix:** Ensure use of `boinc/client:arm64v8` tags for Pi hardware.
-
-4.  **Thermal Management:**
-    * **Observation:** Callisto (top node) consistently runs ~2-5°C hotter than Ganymede due to thermal stacking.
-    * **Fix:** Implemented aggressive PWM fan curves starting at 50°C.
-
----
-
-## 📊 Management
-The cluster is managed remotely via the BOINC Manager (Advanced View) or `boinctui`.
-
-* **Port:** 31416
-* **Remote Access:** Enabled via `--allow_remote_gui_rpc` in the job environment.
+**Maintained by Scienz_Guy | 2026**
