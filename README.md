@@ -1,60 +1,46 @@
-# Theia: High-Performance Pi Cluster for BOINC
-## Distributed Scientific Computing on Overclocked Raspberry Pi 5
+# Theia: Distributed Scientific Computing Pi Cluster
+## High-Efficiency BOINC Implementation
 
-### Part of the [Project Jupiter] Ecosystem
+### 🌌 Overview
+Theia is a dedicated two-node sub-cluster designed for high-throughput, 24/7 volunteer computing via the **Berkeley Open Infrastructure for Network Computing (BOINC)**. The cluster is comprised of two Raspberry Pi 5 nodes—**Ganymede** and **Callisto**—operating in a unified bare-metal environment.
 
-## 🌌 Overview
-Theia is a dedicated computational workhorse engineered for the **Berkeley Open Infrastructure for Network Computing (BOINC)**. Designed to contribute maximum FLOPs to global scientific research, this node represents an optimization-first approach to ARM-based distributed computing. 
+By moving away from containerization, Theia maximizes computational efficiency and eliminates the security abstractions that previously hindered specialized scientific workloads. The cluster is engineered for "Thermal Sustainability," prioritizing long-term hardware health and consistent credit generation over raw burst speed.
 
-By stripping away virtualization layers in favor of a **Bare Metal** architecture, Theia ensures that every clock cycle of the Cortex-A76 is dedicated to scientific throughput rather than container overhead.
-
-Theia resides in the **Project Jupiter** 4-bay tower, functioning as the cluster's primary "Contribution Layer."
-
-> **Note on Extensibility:** While Theia currently operates as a standalone high-performance node, the Jupiter hardware environment is designed for horizontal scaling. The rack is ready to accept additional "Theia-class" nodes (Theia-02, Theia-03) as research demands increase.
-
-## 🛠️ Hardware Specification (Node: Theia)
-The infrastructure is tuned for 100% CPU duty cycles with aggressive thermal management.
+### 🛠️ Hardware Specification (Nodes: Ganymede & Callisto)
+Theia is tuned for 100% duty-cycle stability with a focus on strict thermal ceilings.
 
 | Component | Specification |
 | :--- | :--- |
-| **Compute Node** | Raspberry Pi 5 (8GB RAM) |
-| **Cooling** | Official Pi 5 Active Cooler (Custom PWM Fan Curves) |
-| **Power** | Waveshare PoE HAT (G) via Netgear PoE+ Managed Switch |
-| **Network** | Dedicated Physical Port; Static Internal IP Assignment |
-| **Storage** | SanDisk 128GB Max Endurance MicroSD (High-Cycle SLC) |
-| **Chassis** | UCTronics 4-Bay Tower (Integrated into Jupiter Rack) |
+| **Compute Nodes** | 2x Raspberry Pi 5 (8GB RAM) |
+| **Cooling** | 2x Official Pi 5 Active Coolers (Aggressive Fan Curves) |
+| **Power** | 2x Waveshare PoE HAT (G) via PoE+ Managed Switch |
+| **Network** | Static Internal IP Assignment; Dedicated Physical Ports |
+| **Storage** | 2x SanDisk 128GB Max Endurance MicroSD (High-Cycle SLC) |
 | **Environment** | Dedicated Basement Rack (Sub-20°C Ambient Floor) |
 
-## 🏗️ The "Bare Metal" Engineering Pivot
-Theia’s architecture was redefined to solve specific performance bottlenecks discovered during early cluster testing.
+### 🏗️ The "Bare Metal" Engineering Pivot
+Originally tested in a containerized environment, Theia underwent a total architectural reset to address performance and security bottlenecks.
 
-### 1. The Container Exit
-To maximize computational efficiency, **BOINC was moved to a Bare Metal installation.** This eliminated the ~15% performance penalty observed during high-I/O scientific tasks (like Rosetta@home) when running inside Docker. Operating on the host OS allows for direct memory addressing and superior process scheduling.
+**1. The Docker Departure**
+Docker was eliminated to remove the networking jitter and filesystem abstraction layers that caused latency in high-I/O scientific tasks. Running BOINC on bare metal allows the Linux kernel to manage the Pi 5's 8GB LPDDR4X SDRAM directly, ensuring maximum efficiency for memory-intensive projects.
 
-### 2. Dependency Hardening
-Running on bare metal required a manual audit of the `aarch64` library stack. By managing `libstdc++6` and `zlib1g` directly on the host, Theia supports a wider array of project binaries without the "DLL Hell" often encountered in mismatched container environments.
+**2. Security Hardening**
+By removing the Docker daemon, we eliminated a significant attack surface. We transitioned to a "Zero Trust" host-level security model, using granular `ufw` rules and restricted RPC access to ensure Ganymede and Callisto remain isolated from the broader network while still communicating with the management console.
 
-### 3. Thermal Integrity
-Unlike general-purpose nodes, Theia runs at 100% load indefinitely. We utilize the Pi 5's dedicated fan header and a host-level PWM driver to maintain a strict thermal ceiling, ensuring the SoC never enters a "soft-throttle" state.
+### ⚡ Thermal Engineering & Efficiency Tuning
+Unlike standard builds, Theia is intentionally "Down-Tuned" to achieve a perfect balance of performance and longevity.
 
-## ⚡ Performance Tuning & Thermal Engineering
-Theia is pushed to the hardware's limit to maximize "Credit-Per-Day" (CPD) generation.
+* **Underclocking for Stability:** Both nodes are pinned to **2.3 GHz**. This slight reduction from the stock 2.4 GHz allows for a significant reduction in core voltage.
+* **Undervolting:** By applying a manual voltage offset, we have reduced the power draw and heat signature of the BCM2712 silicon.
+* **Thermal Ceiling:** The combination of underclocking and aggressive cooling maintains a rock-solid **55°C (131°F)** while running at 100% load 24/7. This prevents any possibility of thermal throttling and extends the lifespan of the PoE hardware.
 
-* **Aggressive Overclock:** Tuned to **2.6 GHz** with manual voltage offsets. This provides the necessary headroom to handle complex astrophysical simulations without stalling.
-* **Instruction Set Optimization:** Native `aarch64` binaries are prioritized to utilize the full capabilities of the ARMv8.2-A architecture.
-* **Thermal Ceiling:** The system is configured to maintain a target temperature of **< 75°C (167°F)** even during summer ambient spikes, protected by the basement's natural heat-sink properties.
+### 📈 Monitoring (SITREP)
+Theia utilizes a custom telemetry stack for real-time health tracking:
 
-## 📈 Monitoring (SITREP)
-Real-time telemetry is critical for a 100% duty cycle node.
-
-* **SoC Thermals:** Continuous monitoring of the delta between the basement floor and the 2.6GHz peak load.
-* **SITREP Function:** A custom `.bashrc` function provides an instant hardware health snapshot upon SSH login, displaying CPU frequency, core temp, and BOINC task progress.
-* **Remote RPC:** Secured GUI RPC access allows for centralized monitoring via a management workstation without requiring local GUI overhead on the node.
-
-## 🛡️ Security & Hardening
-* **Granular Firewall:** UFW rules restrict incoming RPC traffic to specific management IPs.
-* **Stateless Operation:** Scientific data is processed in a dedicated `/var/lib/boinc-client` partition to protect system-level stability.
+* **SITREP Function:** A custom `.bashrc` function providing an instant hardware snapshot (Temp, Clock, Load, and BOINC status) upon SSH login.
+* **Headless Management:** Nodes are managed via `boinctui` and `boinc_cmd`, keeping the OS footprint as lean as possible.
+* **Telemetry:** Continuous monitoring of the delta between the 55°C core temp and the basement's sub-20°C ambient floor.
 
 ---
 
-Maintained by ScienzGuy | 2026
+Maintained by Scienz_Guy | 2026
