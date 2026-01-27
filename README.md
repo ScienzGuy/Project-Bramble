@@ -1,53 +1,59 @@
-# 🪐 Project Jupiter: A Hardened 4-Pi 5 Computing Ecosystem
+# GAIa: Distributed Edge AI Cluster
+### High-Performance Ollama Inference on Overclocked Raspberry Pi 5
+**Part of the [Project Jupiter] Ecosystem**
 
-**Project Jupiter** is a distributed high-performance computing (HPC) environment built on a cluster of four Raspberry Pi 5 nodes. The project's mission is to maximize computational efficiency, stability, and security for two distinct workloads: **Astrophysical/Mathematical Modeling** and **Local LLM Inference**.
+## 🌌 Overview
+GAIa (General AI assembly) is a specialized two-node sub-cluster engineered for private, localized Large Language Model (LLM) inference. This project represents a deep-dive into maximizing ARM-based silicon, moving away from the overhead of container orchestration toward a high-performance **Bare Metal** architecture.
 
-## 🏗️ The Architecture: "The Tidy Pivot"
-Originally designed as a containerized Nomad/Docker orchestration environment, the project underwent a significant architectural shift in January 2026. To eliminate the 5–10% virtualization overhead and close security vulnerabilities inherent in project-led container runpoints, the entire cluster was migrated to **Hardened Bare Metal**.
+GAIa resides in Sleds 1 and 2 of the **Project Jupiter** 4-bay tower, serving as the dedicated "Intelligence Layer" of the rack.
 
-### 🌡️ Thermal & Mechanical Engineering
-* **Subterranean Deployment:** Relocated to a subterranean basement environment to exploit a lower ambient thermal floor, maintaining a steady **49°C** under 100% sustained load.
-* **Clock Optimization:** Pinned at **2200MHz** (the Pi 5 efficiency "sweet spot") with a custom undervolt delta to ensure silicon longevity.
-* **CPU Governor:** Systemd-forced `performance` mode to eliminate frequency scaling latency.
+## 🛠️ Hardware Specification (Nodes: Io & Europa)
+The infrastructure is designed for 24/7 high-load stability with a focus on thermal headroom and power delivery.
 
-* ## 🌌 Sub-Cluster A: Theia (Nodes: Ganymede & Callisto)
-**Role:** Big Science & Discrete Mathematics  
-**Compute Engine:** BOINC (Berkeley Open Infrastructure for Network Computing)
+| Component | Specification |
+| :--- | :--- |
+| **Compute Nodes** | 2x Raspberry Pi 5 (8GB RAM) |
+| **Cooling** | 2x Official Pi 5 Active Coolers (Custom Fan Curves) |
+| **Power** | 2x Waveshare PoE HAT (G) via Netgear PoE+ Managed Switch |
+| **Network** | Physical Ports 1 & 2; Static Internal IP Assignment |
+| **Storage** | 2x SanDisk 128GB Max Endurance MicroSD (High-Cycle SLC) |
+| **Chassis** | UCTronics 4-Bay Tower (Occupying Sleds 1 & 2) |
+| **Environment** | Dedicated Basement Rack (Sub-20°C Ambient Floor) |
 
-Theia is optimized for high-FPU throughput and utilizes the **asimd** (Advanced SIMD/NEON) and **asimddp** (Dot Product) instruction sets of the Cortex-A76 for accelerated vector math.
+## 🏗️ The "Bare Metal" Engineering Pivot
+Originally conceived as a Docker/Kubernetes orchestrated cluster, GAIa underwent a significant architectural shift following stability testing with 8B-parameter models.
 
-### 🧬 Science Portfolio & Resource Weighting
-We utilize a weighted resource share to ensure the most critical astrophysical research receives the majority of CPU cycles.
+### 1. The Container Exit
+To eliminate networking jitter and memory fragmentation, **Ollama was moved to a Bare Metal installation**. This allows the Linux kernel to manage the Pi 5's 8GB LPDDR4X-4267 SDRAM directly, preventing Out-of-Memory (OOM) errors during complex reasoning tasks.
 
-| Project | Resource Share | Focus Area |
-| :--- | :--- | :--- |
-| **Einstein@home** | 100 | Gravitational Waves & Pulsar detection |
-| **Rosetta@home** | 100 | Molecular Biology & Protein Folding |
-| **PrimeGrid** | 50 | Mathematics (GFN-16 / GFN-17 searches) |
-| **Asteroids@home** | 25 | Solar System Asteroid Shape Modeling |
-| **Universe@Home** | 10 | Galactic Evolution & Black Hole Research |
+### 2. Decoupled Storage (The Vault)
+* **Node: Io (The Vault):** Functions as the cluster's high-speed "Librarian." It hosts a tuned **NFSv4 share** containing the model weights, allowing for stateless compute on secondary nodes.
+* **Node: Europa (The Specialist):** A dedicated compute engine that mounts "The Vault" to run specialized coding models without local storage overhead.
 
-## 🧠 Sub-Cluster B: GAIa (Nodes: Io & Europa)
-**Role:** Generative Artificial Intelligence & Local Inference  
-**Compute Engine:** Ollama / Open WebUI
+### 3. Hybrid Frontend
+While the AI engine runs on bare metal, **Open WebUI** is maintained within a lean Docker container. This "Hybrid" approach provides a modern, browser-based interface while ensuring the heavy lifting of inference remains unencumbered by container networking layers.
 
-GAIa provides local, private AI inference services. While the primary cluster is bare metal, GAIa utilizes a minimal Docker footprint for the Open WebUI frontend to maintain a clean interface for the family.
+## ⚡ Performance Tuning & Thermal Engineering
+GAIa is pushed beyond stock specifications to minimize token-generation latency.
 
-### 🛠️ Optimization Specs
-* **Inference Engine:** Optimized for 8GB RAM footprints using 4-bit and 8-bit quantization.
-* **Privacy Hardening:** All model weights and chat histories are stored locally; zero data egress to external LLM providers.
+* **Aggressive Overclock:** Both nodes are tuned to **2.6 GHz** with manual overvolting, providing a ~20% uplift in raw compute.
+* **Inference Optimization:** * **Threads:** Pinned to **4** to align with the physical Cortex-A76 core count.
+    * **Memory Management:** `num_ctx` is capped at **2048** to ensure the KV cache stays entirely within RAM, preventing performance-killing SD card swap thrashing.
+* **Model Roster:**
+    * **Io:** `llama3.2:3b` (Fast Utility) & `deepseek-r1:8b` (Complex Reasoning).
+    * **Europa:** `qwen2.5-coder:7b` (Technical/Scripting).
 
-## 🛡️ Network & Security Hardening
-* **Congestion Control:** Enabled **BBR (Bottleneck Bandwidth and RTT)** across all nodes to optimize large workunit transfers and model downloads.
-* **RPC Lockdown:** Remote access restricted via `remote_hosts.cfg`; unauthorized subnet CIDR ranges are strictly prohibited.
-* **Firewall:** Localized software firewall on each node, exposing only essential ports (BOINC RPC: 31416, SSH, WebUI).
+## 📈 Monitoring (SITREP)
+Real-time telemetry is handled via **Glances** in server mode, providing a unified dashboard for:
+* **SoC Thermals:** Monitoring the delta between basement ambient and the 2.6GHz peak load.
+* **I/O Wait:** Tracking the health of the NFS model offloading.
+* **SITREP Function:** A custom `.bashrc` function providing instant hardware telemetry upon SSH login.
 
-## 📈 Monitoring & Maintenance
-* **Live Stats:** Individual nodes monitored via **Glances** (Standalone mode).
-* **Logs:** Filtered for architecture compatibility (`aarch64-unknown-linux-gnu`) to ensure zero "ghost" CPU cycles.
-* **Vector Math Optimization:** Verified `asimd` and `asimddp` support; BOINC binaries utilizing Advanced SIMD (NEON) for Einstein@Home and PrimeGrid GFN workloads.
+## 🛡️ Security & Hardening
+With the cluster's move to a permanent basement location, the network stack was hardened for production-level stability:
+* **Software Firewall:** Granular port-blocking and IP-whitelisting for inter-node communication.
+* **Zero Trust NFS:** Restricted export rules ensuring model weights are only accessible to verified cluster nodes.
 
 ---
 
-## 👨‍💻 Maintainer
-**ScienzGuy** [@ScienzGuy](https://github.com/ScienzGuy)
+**Maintained by Scienz_Guy | 2026**
